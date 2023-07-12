@@ -51,12 +51,11 @@ SIM7000G Modem & Sensor Hardware setup
 /*************************************************************
 BLYNK SETUP 
  *************************************************************/
-// Double check: Ocean Drifter 1
+// Double check: Ocean Drifter ##
 // You should get Auth Token in the Blynk App.
-// Go to the Project Settings (nut icon).
 #define BLYNK_TEMPLATE_ID "TMPL2vzn6V7jN"
 #define BLYNK_TEMPLATE_NAME "OceanDrifterB1"
-#define BLYNK_AUTH_TOKEN "iYXD-U_FUdAoTATQjeHTHhS0Q6c7eBzN"
+#define BLYNK_AUTH_TOKEN "pndA1LYH3V3XW_eCPbT5i2orDmtdWxKL"
 
 char auth[] = BLYNK_AUTH_TOKEN;
 
@@ -291,7 +290,7 @@ void setup()
     digitalWrite(PWR_PIN, LOW);
 
     Serial.println("\nWait...");
-    delay(1000);
+    delay(1500);
     SerialAT.begin(UART_BAUD, SERIAL_8N1, PIN_RX, PIN_TX);
 
     // Restart takes quite some time
