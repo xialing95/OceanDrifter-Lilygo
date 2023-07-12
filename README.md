@@ -9,7 +9,7 @@ https://github.com/Xinyuan-LilyGO/LilyGO-T-SIM7000G
    - LILYGO SIM7000G development board (There is a new SIM7600G available now)
    - a SIM card suited for your region (SixFab Global LTE IoT)
    - USB-C Cable (**Beware the board only have the USB-C port connect in one direction, if the cable isn't working, flip it.**)
-   - Another other additional sensor (Barometer BMP390, 10k Thermistor)
+   - Other additional sensor (Barometer BMP390, 10k Thermistor)
 - Software requirement: 
    - CP210xVCPDriver USB to UART for programming (https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
    - Arduino IDE
