@@ -11,15 +11,6 @@
   Download latest Blynk library here:
     https://github.com/blynkkk/blynk-library/releases/latest
 
-    Downloads, docs, tutorials: http://www.blynk.cc
-    Sketch generator:           http://examples.blynk.cc
-    Blynk community:            http://community.blynk.cc
-    Follow us:                  http://www.fb.com/blynkapp
-                                http://twitter.com/blynk_app
-
-  Blynk library is licensed under MIT license
-  This example code is in public domain.
-
  *************************************************************
   Attention! Please check out TinyGSM guide:
     https://tiny.cc/tinygsm-readme
@@ -48,40 +39,6 @@ SIM7000G Modem & Sensor Hardware setup
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BMP3XX.h"
 
-/*************************************************************
-BLYNK SETUP 
- *************************************************************/
-// Double check: Ocean Drifter ##
-// You should get Auth Token in the Blynk App.
-#define BLYNK_TEMPLATE_ID "TMPL2vzn6V7jN"
-#define BLYNK_TEMPLATE_NAME "OceanDrifterB1"
-#define BLYNK_AUTH_TOKEN "pndA1LYH3V3XW_eCPbT5i2orDmtdWxKL"
-
-char auth[] = BLYNK_AUTH_TOKEN;
-
-// Your GPRS credentials
-// Leave empty, if missing user or pass
-char apn[]  = "super";
-char user[] = "";
-char pass[] = "";
-
-// Default heartbeat interval for GSM is 60
-// If you want override this value, uncomment and set this option:
-// #define BLYNK_HEARTBEAT 30
-
-BlynkTimer timer;
-
-#define BMP_SCK 13
-#define BMP_MISO 12
-#define BMP_MOSI 11
-#define BMP_CS 10
-
-#define SEALEVELPRESSURE_HPA (1013.25)
-float airTemp;
-float pressure; 
-float altitude;
-Adafruit_BMP3XX bmp;
-
 // Set serial for debug console (to Serial Monitor, default speed 115200)
 #define SerialMon Serial
 // Set serial for AT commands
@@ -98,11 +55,83 @@ bool reply = false;
 
 TinyGsm modem(SerialAT);
 
+#define BMP_SCK 13
+#define BMP_MISO 12
+#define BMP_MOSI 11
+#define BMP_CS 10
+
+#define SEALEVELPRESSURE_HPA (1013.25)
+float airTemp;
+float pressure; 
+float altitude;
+Adafruit_BMP3XX bmp;
+
 /*************************************************************
-Sensors Setup Functions
+BLYNK SETUP 
+ *************************************************************/
+// Double check: Ocean Drifter ##
+// You should get Auth Token in the Blynk App.
+#define BLYNK_TEMPLATE_ID "TMPL2vzn6V7jN"
+#define BLYNK_TEMPLATE_NAME "OceanDrifterB1"
+#define BLYNK_AUTH_TOKEN "_niEH0hgBV6kwqK9VVj18-T_KixuSbF8"
+
+char auth[] = BLYNK_AUTH_TOKEN;
+
+// Your GPRS credentials
+// Leave empty, if missing user or pass
+char apn[]  = "super";
+char user[] = "";
+char pass[] = "";
+
+// Default heartbeat interval for GSM is 60
+// If you want override this value, uncomment and set this option:
+// #define BLYNK_HEARTBEAT 30
+BlynkTimer timer;
+
+/*************************************************************
+Hardware Setup Functions
+ - ModemSetup()
  - BMPsetup()
  *************************************************************/
-void BMPsetup(){
+void ModemSetup(){
+    for (int i = 0; i <= 4; i++) {
+    uint8_t network[] = {
+        2,  /*Automatic*/
+//        13, /*GSM only*/
+        38, /*LTE only*/
+        51  /*GSM and LTE only*/
+    };
+    Serial.printf("Try %d method\n", network[i]);
+    modem.setNetworkMode(network[i]);
+    delay(3000);
+    bool isConnected = false;
+    int tryCount = 20;
+    while (tryCount--) {
+      int16_t signal =  modem.getSignalQuality();
+      Serial.print("Signal: ");
+      Serial.print(signal);
+      Serial.print(" ");
+      Serial.print("isNetworkConnected: ");
+      isConnected = modem.isNetworkConnected();
+      Serial.println( isConnected ? "CONNECT" : "NO CONNECT");
+      if (isConnected) {
+        break;
+      }
+      delay(1000);
+      digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+    }
+    if (isConnected) {
+        break;
+    }
+  }
+  digitalWrite(LED_PIN, HIGH);
+
+  Serial.println();
+  Serial.println("Device is connected .");
+  Serial.println();
+}
+
+void BMPSetup(){
     if (!bmp.begin_I2C()) {   // hardware I2C mode, can pass in address & alt Wire
       Serial.println("Could not find a valid BMP390 sensor, check wiring!");
       while (1);
@@ -270,6 +299,9 @@ void sendData(){
   //delay(2000);
 }
 
+/*************************************************************
+Setup serial communcation and initialization
+ *************************************************************/
 void setup()
 {
     Serial.begin(115200); // Set console baud rate
@@ -293,21 +325,22 @@ void setup()
     delay(1500);
     SerialAT.begin(UART_BAUD, SERIAL_8N1, PIN_RX, PIN_TX);
 
+//  Initialize Cellular Connection
     // Restart takes quite some time
     // To skip it, call init() instead of restart()
+    String name = modem.getModemName();
     Serial.println("Initializing modem...");
     if (!modem.init()) {
         Serial.println("Failed to init modem, attempting to continue without restarting");
     }
-
-    String name = modem.getModemName();
+    ModemSetup();
     delay(500);
     Serial.println("Modem Name: " + name + " Setup Completely");
 
 //  Initialize BMP390
     if (BMPEnable){
       Serial.println("Adafruit BMP390 test");
-      BMPsetup();
+      BMPSetup();
     }
     else{
       Serial.println("BMP not enable.");
@@ -321,6 +354,9 @@ void setup()
     SerialMon.println("Blynk Connected & Transmit Timer set");
 }
 
+/*************************************************************
+Run Blynk with timer set 
+ *************************************************************/
 void loop()
 {
     Blynk.run();
