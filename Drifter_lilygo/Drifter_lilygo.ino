@@ -1,11 +1,15 @@
 /*************************************************************
+ MIT-Portugal Marine Robotics Summer Program 2023
+ Ocean Drifter Challenge Example Code
+ Hardware: LILYGO SIM7000
+           BMP390
+           10K Thermistor
+ Developed by: Charlene Xia
+ Based on: https://randomnerdtutorials.com/lilygo-t-sim7000g-esp32-lte-gprs-gps/
+           https://github.com/Xinyuan-LilyGO/LilyGO-T-SIM7000G
+ ************************************************************* 
   Download latest Blynk library here:
     https://github.com/blynkkk/blynk-library/releases/latest
-
-  Blynk is a platform with iOS and Android apps to control
-  Arduino, Raspberry Pi and the likes over the Internet.
-  You can easily build graphic interfaces for all your
-  projects by simply dragging and dropping widgets.
 
     Downloads, docs, tutorials: http://www.blynk.cc
     Sketch generator:           http://examples.blynk.cc
@@ -24,31 +28,17 @@
   Feel free to apply it to any other example. It's simple!
 
  *************************************************************/
-// DEBUG PRINTOUT SETTING
+// DEBUG and Sensor Enable Setting 
 #define DEBUG 1
+#define BMPEnable 0
+#define TempEnable 0
 
 /*************************************************************
-BLYNK SETUP 
-Fill-in your Template ID (only if using Blynk.Cloud)
+SIM7000G Modem & Sensor Hardware setup
  *************************************************************/
-//Ocean Drifter 1
-#define BLYNK_TEMPLATE_ID "TMPL2vzn6V7jN"
-#define BLYNK_TEMPLATE_NAME "OceanDrifterB1"
-#define BLYNK_AUTH_TOKEN "iYXD-U_FUdAoTATQjeHTHhS0Q6c7eBzN"
-
-//Ocean Drifter 2
-//#define BLYNK_TEMPLATE_ID "TMPL2vzn6V7jN"
-//#define BLYNK_TEMPLATE_NAME "OceanDrifterB1"
-//#define BLYNK_AUTH_TOKEN "Mk8JFYEdiPZx18GAlNHUq4Ph8yEI5ugt"
-
 // Select your modem:
 #define TINY_GSM_MODEM_SIM7000
 #define TINY_GSM_RX_BUFFER 1024 // Set RX buffer to 1Kb
-
-// Default heartbeat interval for GSM is 60
-// If you want override this value, uncomment and set this option:
-//#define BLYNK_HEARTBEAT 30
-
 #include <TinyGsmClient.h>
 #include <BlynkSimpleTinyGSM.h>
 
@@ -57,6 +47,30 @@ Fill-in your Template ID (only if using Blynk.Cloud)
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BMP3XX.h"
+
+/*************************************************************
+BLYNK SETUP 
+ *************************************************************/
+// Double check: Ocean Drifter 1
+// You should get Auth Token in the Blynk App.
+// Go to the Project Settings (nut icon).
+#define BLYNK_TEMPLATE_ID "TMPL2vzn6V7jN"
+#define BLYNK_TEMPLATE_NAME "OceanDrifterB1"
+#define BLYNK_AUTH_TOKEN "iYXD-U_FUdAoTATQjeHTHhS0Q6c7eBzN"
+
+char auth[] = BLYNK_AUTH_TOKEN;
+
+// Your GPRS credentials
+// Leave empty, if missing user or pass
+char apn[]  = "super";
+char user[] = "";
+char pass[] = "";
+
+// Default heartbeat interval for GSM is 60
+// If you want override this value, uncomment and set this option:
+// #define BLYNK_HEARTBEAT 30
+
+BlynkTimer timer;
 
 #define BMP_SCK 13
 #define BMP_MISO 12
@@ -67,20 +81,7 @@ Fill-in your Template ID (only if using Blynk.Cloud)
 float airTemp;
 float pressure; 
 float altitude;
-
 Adafruit_BMP3XX bmp;
-
-BlynkTimer timer;
-
-// You should get Auth Token in the Blynk App.
-// Go to the Project Settings (nut icon).
-char auth[] = BLYNK_AUTH_TOKEN;
-
-// Your GPRS credentials
-// Leave empty, if missing user or pass
-char apn[]  = "super";
-char user[] = "";
-char pass[] = "";
 
 // Set serial for debug console (to Serial Monitor, default speed 115200)
 #define SerialMon Serial
@@ -98,6 +99,30 @@ bool reply = false;
 
 TinyGsm modem(SerialAT);
 
+/*************************************************************
+Sensors Setup Functions
+ - BMPsetup()
+ *************************************************************/
+void BMPsetup(){
+    if (!bmp.begin_I2C()) {   // hardware I2C mode, can pass in address & alt Wire
+      Serial.println("Could not find a valid BMP390 sensor, check wiring!");
+      while (1);
+    }
+  
+    // Set up oversampling and filter initialization
+    bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
+    bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);
+    bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
+    bmp.setOutputDataRate(BMP3_ODR_50_HZ);
+    Serial.println("Adafruit BMP390 setup complete");
+}
+
+/*************************************************************
+Sensors Functions for reading value
+ - readBattery(), read battery voltage
+ - readTemp(), read 10K thermistor voltage divider value
+ - readBaro(), read temperature, pressure and estimate altitude
+ *************************************************************/
 float readBattery(uint8_t pin)
 {
     int vref = 1100;
@@ -160,6 +185,12 @@ void readBaro(){
   }
 }
 
+/*************************************************************
+Sensors Functions for sending value via blynk
+ - sentGPS(), read and sentGPS coordinate as double and string 
+   for blynk
+ - sentData(), call sentGPS() and send read sensor data.
+ *************************************************************/
 void sentGPS(){
   // Set SIM7000G GPIO4 HIGH ,turn on GPS power
   // CMD:AT+SGPIO=0,4,1,1
@@ -221,17 +252,20 @@ void sentGPS(){
 void sendData(){
   // You can send any value at any time.
   // Please don't send more that 10 values per second.
-  float mv = readBattery(BAT_ADC);
-  float temp = readTemp(TEMP_ADC);
+  if (TempEnable){
+    float mv = readBattery(BAT_ADC);
+    float temp = readTemp(TEMP_ADC);
+    Blynk.virtualWrite(V0, ((mv / 4200) * 100));
+    Blynk.virtualWrite(V3, int(temp));
+  }
+
+  if (BMPEnable){
+    delay(1000);
+    readBaro();
+    Blynk.virtualWrite(V4, double(pressure));
+    Blynk.virtualWrite(V5, double(altitude));
+  }
   
-  Blynk.virtualWrite(V0, ((mv / 4200) * 100));
-  Blynk.virtualWrite(V3, int(temp));
-
-  delay(1000);
-  readBaro();
-  Blynk.virtualWrite(V4, double(pressure));
-  Blynk.virtualWrite(V5, double(altitude));
-
   delay(1000);
   sentGPS();
   //delay(2000);
@@ -244,13 +278,14 @@ void setup()
 
     delay(100);
 
-    // Set LED OFF
+//  Set LED OFF
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
 
     pinMode(PWR_PIN, OUTPUT);
     digitalWrite(PWR_PIN, HIGH);
-    
+
+//  Initialize SIM7000G Modem 
     // Starting the machine requires at least 1 second of low level, and with a level conversion, the levels are opposite
     delay(1500);
     digitalWrite(PWR_PIN, LOW);
@@ -270,25 +305,21 @@ void setup()
     delay(500);
     Serial.println("Modem Name: " + name + " Setup Completely");
 
-//  Launch BMP390
-    Serial.println("Adafruit BMP390 test");
-    if (!bmp.begin_I2C()) {   // hardware I2C mode, can pass in address & alt Wire
-      Serial.println("Could not find a valid BMP390 sensor, check wiring!");
-      while (1);
+//  Initialize BMP390
+    if (BMPEnable){
+      Serial.println("Adafruit BMP390 test");
+      BMPsetup();
     }
-  
-    // Set up oversampling and filter initialization
-    bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-    bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);
-    bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
-    bmp.setOutputDataRate(BMP3_ODR_50_HZ);
-    Serial.println("Adafruit BMP390 setup complete");
-
+    else{
+      Serial.println("BMP not enable.");
+    }
+    
 //  Initialize Blynk
+    Serial.println("Trying to connect to Celluar Data & Blynk Platform");
     Blynk.begin(auth, modem, apn, user, pass);
     // Setup a function to be called every 25 second
     timer.setInterval(25000L, sendData);
-    SerialMon.println("Timer set");
+    SerialMon.println("Blynk Connected & Transmit Timer set");
 }
 
 void loop()
