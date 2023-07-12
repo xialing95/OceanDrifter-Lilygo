@@ -24,11 +24,22 @@
   Feel free to apply it to any other example. It's simple!
 
  *************************************************************/
+// DEBUG PRINTOUT SETTING
+#define DEBUG 1
 
-/* Fill-in your Template ID (only if using Blynk.Cloud) */
+/*************************************************************
+BLYNK SETUP 
+Fill-in your Template ID (only if using Blynk.Cloud)
+ *************************************************************/
+//Ocean Drifter 1
 #define BLYNK_TEMPLATE_ID "TMPL2vzn6V7jN"
 #define BLYNK_TEMPLATE_NAME "OceanDrifterB1"
 #define BLYNK_AUTH_TOKEN "iYXD-U_FUdAoTATQjeHTHhS0Q6c7eBzN"
+
+//Ocean Drifter 2
+//#define BLYNK_TEMPLATE_ID "TMPL2vzn6V7jN"
+//#define BLYNK_TEMPLATE_NAME "OceanDrifterB1"
+//#define BLYNK_AUTH_TOKEN "Mk8JFYEdiPZx18GAlNHUq4Ph8yEI5ugt"
 
 // Select your modem:
 #define TINY_GSM_MODEM_SIM7000
@@ -43,6 +54,21 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_Sensor.h>
+#include "Adafruit_BMP3XX.h"
+
+#define BMP_SCK 13
+#define BMP_MISO 12
+#define BMP_MOSI 11
+#define BMP_CS 10
+
+#define SEALEVELPRESSURE_HPA (1013.25)
+float airTemp;
+float pressure; 
+float altitude;
+
+Adafruit_BMP3XX bmp;
 
 BlynkTimer timer;
 
@@ -72,29 +98,18 @@ bool reply = false;
 
 TinyGsm modem(SerialAT);
 
-//BLYNK_WRITE(V3)
-//{
-//    if (param.asInt() == 1) {
-//
-//        digitalWrite(LED_PIN, LOW);
-//        Blynk.logEvent("led_off");//Sending Events
-//    } else {
-//        digitalWrite(LED_PIN, HIGH);
-//        Blynk.logEvent("led_on");//Sending Events
-//    }
-//}
-//
-////Syncing the output state with the app at startup
-//BLYNK_CONNECTED()
-//{
-//    Blynk.syncVirtual(V3);  // will cause BLYNK_WRITE(V3) to be executed
-//}
-
 float readBattery(uint8_t pin)
 {
     int vref = 1100;
     uint16_t volt = analogRead(pin);
     float battery_voltage = ((float)volt / 4095.0) * 2.0 * 3.3 * (vref);
+    
+    if (DEBUG){
+      SerialMon.println("Battery = ");
+      SerialMon.println(battery_voltage);
+      SerialMon.println(" *V");                   
+    }
+    
     return battery_voltage;
 }
 
@@ -103,29 +118,49 @@ float readTemp(uint8_t pin)
   uint16_t volt = analogRead(pin);
   float resistance = 10000/ ((4095.0 / volt)  - 1);     //10K / (1023/ADC - 1) 
   float temp; 
-  temp = resistance / 10000;     // (R/Ro)  
-  temp = log(temp);                  // ln(R/Ro)  
-  temp /= 3950;                   // 1/B * ln(R/Ro)  
-  temp += 1.0 / (25 + 273.15); // + (1/To)  
+  temp = resistance / 10000;                            // (R/Ro)  
+  temp = log(temp);                                     // ln(R/Ro)  
+  temp /= 3950;                                         // 1/B * ln(R/Ro)  
+  temp += 1.0 / (25 + 273.15);                          // + (1/To)  
   temp = 1.0 / temp;                 
-  temp -= 273.15;                         
+  temp -= 273.15;     
+
+  if (DEBUG){
+    SerialMon.println("Water Temperature = ");
+    SerialMon.println(temp);
+    SerialMon.println(" *C");                   
+  }
+  
   return temp;
 }
 
-// This function sends Arduino's up time every second to Virtual Pin (5).
-// In the app, Widget's reading frequency should be set to PUSH. This means
-// that you define how often to send data to Blynk App.
-void sendGPS()
-{
-  // You can send any value at any time.
-  // Please don't send more that 10 values per second.
-  float mv = readBattery(BAT_ADC);
-  float temp = readTemp(TEMP_ADC);
-  Blynk.virtualWrite(V0, ((mv / 4200) * 100));
-  SerialMon.println("Battery: " + String(mv));
-  Blynk.virtualWrite(V3, temp);
-  SerialMon.println("Temperature: " + String(temp));
+void readBaro(){
+  if (! bmp.performReading()) {
+    SerialMon.println("Failed to perform reading :(");
+    return;
+  }
+  airTemp = bmp.temperature;
+  pressure = bmp.pressure / 100.0;
+  altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
   
+  if (DEBUG){
+    SerialMon.println("Air Temperature = ");
+    SerialMon.println(airTemp);
+    SerialMon.println(" *C");
+
+    SerialMon.println("Pressure = ");
+    SerialMon.println(pressure);
+    SerialMon.println(" hPa");
+  
+    SerialMon.println("Approx. Altitude = ");
+    SerialMon.println(altitude);
+    SerialMon.println(" m");
+  
+    SerialMon.println();
+  }
+}
+
+void sentGPS(){
   // Set SIM7000G GPIO4 HIGH ,turn on GPS power
   // CMD:AT+SGPIO=0,4,1,1
   // Only in version 20200415 is there a function to control GPS power
@@ -154,16 +189,20 @@ void sendGPS()
   if (modem.getGPS(&lat, &lon, &speed, &alt, &vsat, &usat, &accuracy,
                    &year, &month, &day, &hour, &min, &sec)) {
       Blynk.virtualWrite(V1, double(lon), double(lat));
-      SerialMon.println("Latitude: " + String(lat, 8) + "\tLongitude: " + String(lon, 8));
+      if (DEBUG){
+        SerialMon.println("Latitude: " + String(lat, 8) + "\tLongitude: " + String(lon, 8));
+      }
   } 
   else {
       SerialMon.println("No GPS Signal");
   }
 
-  //SerialMon.println("Retrieving GPS/GNSS/GLONASS location again as a string");
-  //String gps_raw = modem.getGPSraw();
-  //Blynk.virtualWrite(V2, gps_raw);
-  //SerialMon.println("GPS/GNSS Based Location String: " + gps_raw);
+  SerialMon.println("Retrieving GPS/GNSS/GLONASS location again as a string");
+  String gps_raw = modem.getGPSraw();
+  Blynk.virtualWrite(V2, gps_raw);
+  if (DEBUG){
+    SerialMon.println("GPS/GNSS Based Location String: " + gps_raw);
+  }
   
   SerialMon.println("Disabling GPS");
   modem.disableGPS();
@@ -179,7 +218,24 @@ void sendGPS()
   delay(200);
 }
 
+void sendData(){
+  // You can send any value at any time.
+  // Please don't send more that 10 values per second.
+  float mv = readBattery(BAT_ADC);
+  float temp = readTemp(TEMP_ADC);
+  
+  Blynk.virtualWrite(V0, ((mv / 4200) * 100));
+  Blynk.virtualWrite(V3, int(temp));
 
+  delay(1000);
+  readBaro();
+  Blynk.virtualWrite(V4, double(pressure));
+  Blynk.virtualWrite(V5, double(altitude));
+
+  delay(1000);
+  sentGPS();
+  //delay(2000);
+}
 
 void setup()
 {
@@ -196,24 +252,12 @@ void setup()
     digitalWrite(PWR_PIN, HIGH);
     
     // Starting the machine requires at least 1 second of low level, and with a level conversion, the levels are opposite
-    delay(1000);
+    delay(1500);
     digitalWrite(PWR_PIN, LOW);
 
-//    SPI.begin(SD_SCLK, SD_MISO, SD_MOSI, SD_CS);
-//    if (!SD.begin(SD_CS)) {
-//        Serial.println("SDCard MOUNT FAIL");
-//    } else {
-//        uint32_t cardSize = SD.cardSize() / (1024 * 1024);
-//        String str = "SDCard Size: " + String(cardSize) + "MB";
-//        Serial.println(str);
-//    }
-
     Serial.println("\nWait...");
-
     delay(1000);
-
     SerialAT.begin(UART_BAUD, SERIAL_8N1, PIN_RX, PIN_TX);
-
 
     // Restart takes quite some time
     // To skip it, call init() instead of restart()
@@ -224,23 +268,31 @@ void setup()
 
     String name = modem.getModemName();
     delay(500);
-    Serial.println("Modem Name: " + name);
+    Serial.println("Modem Name: " + name + " Setup Completely");
 
-//    // Launch BMP085
-//    if (!bmp.begin()) {
-//        Serial.println("Could not find a valid BMP085 sensor, check wiring!");
-//        while (1) {}
-//    }
+//  Launch BMP390
+    Serial.println("Adafruit BMP390 test");
+    if (!bmp.begin_I2C()) {   // hardware I2C mode, can pass in address & alt Wire
+      Serial.println("Could not find a valid BMP390 sensor, check wiring!");
+      while (1);
+    }
+  
+    // Set up oversampling and filter initialization
+    bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
+    bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);
+    bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
+    bmp.setOutputDataRate(BMP3_ODR_50_HZ);
+    Serial.println("Adafruit BMP390 setup complete");
 
+//  Initialize Blynk
     Blynk.begin(auth, modem, apn, user, pass);
     // Setup a function to be called every 25 second
-    timer.setInterval(10000L, sendGPS);
+    timer.setInterval(25000L, sendData);
+    SerialMon.println("Timer set");
 }
 
 void loop()
 {
-
     Blynk.run();
     timer.run();
-
 }
