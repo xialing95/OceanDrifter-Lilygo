@@ -20,3 +20,7 @@ https://github.com/Xinyuan-LilyGO/LilyGO-T-SIM7000G
       - Arduino Library, **Sketch > Include Library > Manage Libraries**:
         - TinyGSM by Volodymyr Shymanskyy.
         - StreamDebugger by Volodymyr Shymanskyy.
+
+
+https://github.com/user-attachments/assets/bb6a1409-8e51-4e22-884b-11ac571b6d88
+
