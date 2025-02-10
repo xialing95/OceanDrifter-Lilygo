@@ -22,5 +22,10 @@ https://github.com/Xinyuan-LilyGO/LilyGO-T-SIM7000G
         - StreamDebugger by Volodymyr Shymanskyy.
 
 
-https://github.com/user-attachments/assets/bb6a1409-8e51-4e22-884b-11ac571b6d88
+
+https://github.com/user-attachments/assets/ac6ef01f-cbc1-4a8b-bc05-6667f3468ced
+
+
+https://github.com/user-attachments/assets/68fc129f-a11f-4fcb-8bb2-79ae8c8a03e7
+
 
