@@ -1,7 +1,4 @@
 # Ocean Drifter Challenge
-# MIT-Portugal Program 2023 Robotics Summer Camp
-Ocean Drifter Challenge
-
 ## Using LILYGO SIM7000G Cellular GPS tracker 
 ![image](https://github.com/xialing95/OceanDrifter-Lilygo/assets/9020926/07e87111-3bf0-42e0-b1af-615bc4868d23)
 https://github.com/Xinyuan-LilyGO/LilyGO-T-SIM7000G
