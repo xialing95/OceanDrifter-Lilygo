@@ -1,5 +1,5 @@
 # Ocean Drifter Challenge
-# MIT-Portugal Program 2023 Marine Robotics Summer School
+## MIT-Portugal Program 2023 Marine Robotics Summer School
 
 This GitHub repository provides resources, documents, and code for the Ocean Drifter Project. The project is part of a hands-on initiative during the 2-week MIT-Portugal Program Marine Robotics Summer School.
 
