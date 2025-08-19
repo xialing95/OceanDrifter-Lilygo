@@ -8,13 +8,13 @@ The MIT Portugal Program is an international collaboration that demonstrates how
 This initiative is sponsored by the MIT Portugal Program. For more information, visit their website: https://mitportugal.org/
 Contents:
 
-    Course Presentation and Handouts: Includes the introduction presentation PDF, project handout, and instruction PDF.
+* Course Presentation and Handouts: Includes the introduction presentation PDF, project handout, and instruction PDF.
 
-    Datasheets: Contains datasheets for custom GPS components and an example commercial drifter datasheet.
+* Datasheets: Contains datasheets for custom GPS components and an example commercial drifter datasheet.
 
-    GPS Test: Code and resources used to test the GPS on the custom system.
+* GPStest: Code and resources used to test the GPS on the custom system.
 
-    MPPCustomGPSTracker: Code for the custom LILYGO GPS tracker system.
+* MPPCustomGPSTracker: Code for the custom LILYGO GPS tracker system.
 
 ## MPP Marine Robotic Summer School 2023 Drifter Result
 Below is a timelapse of one student build ocean drifter GPS tracking result. The drifter were deployed at the coast Faial Azores. 
