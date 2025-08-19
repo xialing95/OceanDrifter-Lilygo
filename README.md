@@ -17,7 +17,7 @@ Contents:
     MPPCustomGPSTracker: Code for the custom LILYGO GPS tracker system.
 
 ## MPP Marine Robotic Summer School 2023 Drifter Result
-Below is the student build ocean drifter GPS tracking result. The drifter were deployed at the coast Faial Azores. 
+Below is a timelapse of one student build ocean drifter GPS tracking result. The drifter were deployed at the coast Faial Azores. 
 
 https://github.com/user-attachments/assets/ac6ef01f-cbc1-4a8b-bc05-6667f3468ced
 
