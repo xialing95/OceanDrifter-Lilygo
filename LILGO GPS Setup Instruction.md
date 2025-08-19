@@ -1,15 +1,18 @@
 # Ocean Drifter Challenge
 ## Using LILYGO SIM7000G Cellular GPS tracker 
 ![image](https://github.com/xialing95/OceanDrifter-Lilygo/assets/9020926/07e87111-3bf0-42e0-b1af-615bc4868d23)
-https://github.com/Xinyuan-LilyGO/LilyGO-T-SIM7000G
-- Materials:
+This guide is based on standard practices for LilyGO hardware and ESP32-based projects, adapted for similar repositories and devices[1][2]. 
+
+
+## 1. Hardware Requirements
    - LILYGO SIM7000G development board (There is a new SIM7600G available now)
    - a SIM card suited for your region (SixFab Global LTE IoT)
    - USB-C Cable (**Beware the board only have the USB-C port connect in one direction, if the cable isn't working, flip it.**)
    - Other additional sensor (Barometer BMP390, 10k Thermistor)
-- Software requirement: 
+
+## 2. Software Requirements
    - CP210xVCPDriver USB to UART for programming (https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
-   - Arduino IDE
+   - Arduino IDE (version 1.8 or later) or **Visual Studio Code** with **PlatformIO**
       - Arduino Board **Tools > Board**:
         - https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/
          - Use ESP32 Wrover Module
@@ -17,23 +20,7 @@ https://github.com/Xinyuan-LilyGO/LilyGO-T-SIM7000G
       - Arduino Library, **Sketch > Include Library > Manage Libraries**:
         - TinyGSM by Volodymyr Shymanskyy.
         - StreamDebugger by Volodymyr Shymanskyy.
-       
-# OceanDrifter-Lilygo: Instruction Page
-
-Below is a general instruction page template for the OceanDrifter-Lilygo project. This guide is based on standard practices for LilyGO hardware and ESP32-based projects, adapted for similar repositories and devices[1][2].
-
-## 1. Hardware Requirements
-
-- **LilyGO/TTGO ESP32 board** (specific model as used in OceanDrifter-Lilygo)
-- **USB cable** for programming
-- **Sensors** (as specified in your project)
-- **Computer** with internet access
-
-## 2. Software Requirements
-
-- **Arduino IDE** (version 1.8 or later) or **Visual Studio Code** with **PlatformIO**
-- **ESP32 Board Support** for Arduino or PlatformIO
-- **Required libraries** (see the `lib` or `libraries` folder in the repository)
+   - **ESP32 Board Support** for Arduino or PlatformIO
 
 ## 3. Setup Instructions
 
@@ -51,8 +38,10 @@ Below is a general instruction page template for the OceanDrifter-Lilygo project
    - Go to `Tools > Board > Boards Manager`, search for "ESP32," and install.
 
 3. **Install Required Libraries**
-   - Go to `Sketch > Include Library > Manage Libraries`.
-   - Search and install libraries as listed in the repository's documentation or `README.md`.
+   - Go to `Sketch > Include Library > Manage Libraries`. 
+   - Search and install libraries as listed
+        - TinyGSM by Volodymyr Shymanskyy.
+        - StreamDebugger by Volodymyr Shymanskyy.   
 
 4. **Open the Project**
    - Download or clone the OceanDrifter-Lilygo repository.
@@ -115,12 +104,5 @@ This template provides a comprehensive starting point for an instruction page. A
 [7] https://github.com/Xinyuan-LilyGO/LilyGo-LoRa-Series
 [8] https://github.com/Xinyuan-LilyGO/TTGO-T-Display
 [9] https://github.com/LilyGO
-
-
-
-https://github.com/user-attachments/assets/ac6ef01f-cbc1-4a8b-bc05-6667f3468ced
-
-
-https://github.com/user-attachments/assets/68fc129f-a11f-4fcb-8bb2-79ae8c8a03e7
 
 
