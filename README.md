@@ -19,6 +19,12 @@ Contents:
 ## MPP Marine Robotic Summer School 2023 Drifter Result
 Below is a timelapse of one student build ocean drifter GPS tracking result. The drifter were deployed at the coast Faial Azores. 
 
+
+
+https://github.com/user-attachments/assets/92e88994-5008-4f9d-9331-2181ad64e026
+
+
+
 https://github.com/user-attachments/assets/ac6ef01f-cbc1-4a8b-bc05-6667f3468ced
 
 
